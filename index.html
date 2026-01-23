@@ -245,8 +245,24 @@
         <!-- Back to Top Button -->
         <button id="scrollTopBtn" title="Наверх">↑</button>
 
+        <div id="statusModal" class="modal-overlay hidden-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modalTitle">Заголовок</h3>
+                    <span class="close-modal">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <p id="modalMessage">Сообщение</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-sm close-modal-btn">OK</button>
+                </div>
+            </div>
+        </div>
+
         <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
         <script>
+
 
             const SUPABASE_URL = 'https://cdgzyayhjrpcslfzlazw.supabase.co';
             const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNkZ3p5YXloanJwY3NsZnpsYXp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg5MzI1ODksImV4cCI6MjA4NDUwODU4OX0.bj5sj-blEHUkbMdNJJhu-illiCccxYBTTU8ch5AXZhU';
@@ -254,6 +270,40 @@
             // Ensure supabase object is available
             const { createClient } = supabase;
             const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+            // Modal Logic
+            const modal = document.getElementById('statusModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalMessage = document.getElementById('modalMessage');
+            const closeBtns = document.querySelectorAll('.close-modal, .close-modal-btn');
+
+            const showModal = (title, message) => {
+                modalTitle.textContent = title;
+                modalMessage.textContent = message;
+                modal.classList.remove('hidden-modal');
+                // Small delay to allow display:flex to apply before adding opacity class
+                setTimeout(() => {
+                    modal.classList.add('active');
+                }, 10);
+            };
+
+            const closeModal = () => {
+                modal.classList.remove('active');
+                setTimeout(() => {
+                    modal.classList.add('hidden-modal');
+                }, 300); // Wait for transition
+            };
+
+            closeBtns.forEach(btn => {
+                btn.addEventListener('click', closeModal);
+            });
+
+            // Close on click outside
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
 
             // Phone Input Mask
             const phoneInput = document.getElementById('phoneInput');
@@ -323,13 +373,13 @@
                 // Validation
                 if (digits.startsWith('375')) {
                     if (digits.length !== 12) {
-                        alert('Пожалуйста, введите корректный номер телефона (например, +375 29 111-22-33).');
+                        showModal('Ошибка', 'Пожалуйста, введите корректный номер телефона (например, +375 29 111-22-33).');
                         return;
                     }
                 } else {
                     // Minimal check for other countries
                     if (digits.length < 10) {
-                        alert('Пожалуйста, введите корректный номер телефона.');
+                        showModal('Ошибка', 'Пожалуйста, введите корректный номер телефона.');
                         return;
                     }
                 }
@@ -351,7 +401,6 @@
                     // Upload Image
                     if (file) {
                         if (file.size > 10 * 1024 * 1024) {
-                            //alert('Файл слишком большой! Максимальный размер: 10 МБ.');
                             throw new Error('Файл слишком большой! Максимальный размер: 10 МБ.');
                         }
 
@@ -379,14 +428,12 @@
 
                     if (insertError) throw insertError;
 
-
-
-                    alert('Заявка успешно отправлена! Мы свяжемся с вами.');
+                    showModal('Успешно', 'Заявка успешно отправлена! Мы свяжемся с вами.');
                     e.target.reset();
 
                 } catch (error) {
                     console.error('Error:', error);
-                    alert('Ошибка: ' + error.message);
+                    showModal('Ошибка', 'Ошибка: ' + error.message);
                 } finally {
                     submitBtn.textContent = originalBtnText;
                     submitBtn.disabled = false;
